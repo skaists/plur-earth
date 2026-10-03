@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/beehive-nature/beehive-nature",
+  "commit": "1fb8101ab6185f1daf546b9ca0fd788f04cc392d",
+  "surface": "surfaces/festival/index.html",
+  "localAssets": "styles, fonts, language corpus and view controls",
+  "externalApps": "https://skaists.dev/surfaces/",
+  "customDomain": "plur.earth"
+}

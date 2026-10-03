@@ -1,0 +1,185 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   THE RAILS BADGE — every surface's reassurance line (2026-08-22).
+   Founder word: "shows their free 0X hash public and green… on all the
+   surfaces… reassured and reinforced their bDiD and crypto rails are
+   connected and ready… active connected and LiVE."
+
+   LAZY BY RULING (2026-08-26): this badge makes NO request on load. It paints
+   a status baked at build time from a real read, and prints that bake's date,
+   so a reader still arrives to a green LIVE while the page stays silent. The
+   ↻ affordance is the only thing that ever contacts a chain node.
+   First-party + keyless: the 0x is a DERIVED PUBLIC FINGERPRINT of the
+   connected soul — sha256('bnr.b/evm/'+soul), the bzDiD pointer family
+   (same shape as bnr.b/did-plc/ and bnr.b/nostr-npub/) — an identifier,
+   never a key. The green pulse means the rails ANSWERED (one live keyless
+   get_info on the estate's failover trio, on tap); amber means honest gap.
+   Injected by tour.js into the tbar — rides every surface.
+   ═══════════════════════════════════════════════════════════════════════ */
+(function () {
+  if (document.getElementById('railsbadge')) return;
+  function pill() {
+    var host = document.getElementById('tbar'); if (!host) return setTimeout(pill, 400);
+    var el = document.createElement('span');
+    el.id = 'railsbadge';
+    /* margin/min-height/height/box-sizing pinned on the wrap and both inner spans:
+       a page's bare span{} rule reaches every property an inline style leaves
+       open, and the tbar stretches to its tallest rider (see register.js /
+       lang.js, same law). The tour bar is nobody's element selector. */
+    el.style.cssText = 'display:inline-flex;align-items:center;gap:5px;margin:0 0 0 10px;padding-left:10px;' +
+      'border-left:1px solid #243026;font:12px ui-monospace,"IBM Plex Mono",monospace;color:#9aa39d;flex-shrink:0;' +
+      'min-height:0;height:auto;box-sizing:border-box';
+    el.innerHTML = '<span id="rb-dot" style="width:7px;height:7px;border-radius:50%;background:#5f6f61;display:inline-block;margin:0;min-height:0;box-sizing:border-box"></span>' +
+      '<span id="rb-txt" style="margin:0;min-height:0;height:auto;box-sizing:border-box">rails…</span>';
+    host.appendChild(el);
+    boot();
+  }
+  async function sha256hex(str) {
+    try {
+      var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return [...new Uint8Array(buf)].map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    } catch (e) { /* non-secure context: honest fallback (FNV-1a twice, labeled by shape) */
+      var h1 = 0x811c9dc5, h2 = 0x01000193;
+      for (var i = 0; i < str.length; i++) { h1 ^= str.charCodeAt(i); h1 = Math.imul(h1, 16777619) >>> 0;
+        h2 = (Math.imul(h2 ^ str.charCodeAt(i), 2246822519) + i) >>> 0; }
+      var out = ''; for (var k = 0; k < 5; k++) { h1 = Math.imul(h1 ^ (h1 >>> 13), 1274126177) >>> 0; h2 = (Math.imul(h2 ^ (h2 >>> 11), 2654435761) + h1) >>> 0; out += (h2 >>> 0).toString(16).padStart(8, '0'); }
+      return out.slice(0, 40);
+    }
+  }
+  /* THE BAKE — a real read, recorded at build time, not a guess. Refresh it by
+     re-running the read and updating these three fields; the badge prints the
+     date so a stale bake advertises its own staleness. */
+  var BAKED = { head: 516799778, at: '2026-08-26', host: 'eos.greymass.com' };
+  var VH = ['https://eos.api.eosnation.io', 'https://eos.greymass.com'];
+  async function railsAlive() {
+    for (var i = 0; i < VH.length; i++) {
+      try { var r = await fetch(VH[i] + '/v1/chain/get_info', { method: 'POST', body: '{}' });
+        if (r.ok) { var d = await r.json(); return d.head_block_num || true; } } catch (e) {}
+    }
+    return false;
+  }
+  /* the ↻ affordance: the ONLY thing that makes this page talk to a chain node */
+  function recheck(ev) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    var dot = document.getElementById('rb-dot'), txt = document.getElementById('rb-txt');
+    if (!txt) return;
+    var prev = txt.innerHTML;
+    txt.textContent = 'asking the chain…';
+    railsAlive().then(function (alive) {
+      if (alive) {
+        BAKED.head = alive === true ? BAKED.head : alive;
+        if (dot) dot.style.background = '#7ddf8f';
+        boot(true);
+      } else {
+        if (dot) dot.style.background = '#ffb347';
+        txt.innerHTML = 'rails: honest gap · asked just now';
+        setTimeout(function () { txt.innerHTML = prev; wireRecheck(); }, 4000);
+      }
+    });
+  }
+  function wireRecheck() {
+    var r = document.getElementById('rb-recheck');
+    if (r) r.onclick = recheck;
+  }
+  var CHECK = ' <span id="rb-recheck" role="button" tabindex="0" title="ask a public chain node right now — the only outside request this page ever makes" style="color:#8a9a8a;cursor:pointer;display:inline-flex;align-items:center;min-height:44px;padding:0 8px;border-radius:6px">↻</span>';
+  async function boot(justAsked) {
+    var dot = document.getElementById('rb-dot'), txt = document.getElementById('rb-txt');
+    if (!dot || !txt) return;
+    var soul = null; try { soul = localStorage.getItem('bnr_soul'); } catch (e) {}
+    /* Equivalent truth already painted (wallet data-wl-soul + name field): same
+       as a stored soul for chrome — never leave connect/create up beside a live .b. */
+    if (!soul) {
+      try {
+        var painted = document.body && document.body.getAttribute('data-wl-soul') === 'true';
+        var wq = document.getElementById('wq') || document.getElementById('soul-in');
+        var typed = wq && (wq.value || '').trim().toLowerCase().replace(/\.b$/, '');
+        if (painted && typed) soul = typed;
+      } catch (e2) {}
+    }
+    if (soul) soul = String(soul).trim().toLowerCase().replace(/\.b$/, '');
+    if (!soul) soul = null;
+    /* NO FETCH HERE. The verdict is the bake unless a reader asked. */
+    var when = justAsked ? 'just now' : 'verified ' + BAKED.at;
+    var alive = true;
+    if (!soul) {
+      dot.style.background = '#7ddf8f'; dot.title = 'rails live · ' + when;
+      var B = 'https://skaists.dev/';
+      txt.innerHTML = 'rails <b style="color:#7ddf8f">LIVE</b>' + CHECK + ' <span style="color:#5f6f61">' + when + '</span> · <a href="' + B +
+        'surfaces/bnames.html" style="color:#00E5FF;text-decoration:none;display:inline-flex;align-items:center;min-height:44px;padding:0 8px;border-radius:6px">connect</a> · <a href="' + B +
+        'surfaces/onboarding/" style="color:#7ddf8f;text-decoration:none;display:inline-flex;align-items:center;min-height:44px;padding:0 8px;border-radius:6px">create bzDiD</a>';
+      wireRecheck();
+      return;
+    }
+    /* the soul's public 0x rail fingerprint — derived identifier, never a key */
+    var fp = await sha256hex('bnr.b/evm/' + soul + '@' + location.origin);
+    var ox = '0x' + fp.slice(0, 6) + '…' + fp.slice(-4);
+    dot.style.background = '#7ddf8f';
+    dot.style.cssText += ';box-shadow:0 0 8px rgba(125,223,143,.8);animation:rbPulse 2.6s ease-in-out infinite';
+    var st = document.getElementById('rb-pulse-style') || document.createElement('style');
+    st.id = 'rb-pulse-style';
+    st.textContent = '@keyframes rbPulse{0%,100%{box-shadow:0 0 4px rgba(125,223,143,.5)}50%{box-shadow:0 0 11px rgba(125,223,143,.95)}}';
+    document.head.appendChild(st);
+    /* TOFU — the https-lock law: origin-bound fingerprint, pinned on first verified
+       visit; a spoofed origin CANNOT reproduce your pinned 0x. Tap to inspect. */
+    var pin = null; try { pin = JSON.parse(localStorage.getItem('bnr_rails_pin') || 'null'); } catch (e) {}
+    var myPin = pin && pin[soul + '@' + location.origin];
+    var state, col;
+    if (!myPin) {
+      state = '🔒 pinned'; col = '#7ddf8f';
+      try { var np = pin || {}; np[soul + '@' + location.origin] = fp.slice(0, 12);
+        localStorage.setItem('bnr_rails_pin', JSON.stringify(np)); } catch (e) {}
+    } else if (myPin === fp.slice(0, 12)) {
+      state = '🔒 verified origin'; col = '#7ddf8f';
+    } else {
+      state = '⚠ fingerprint CHANGED — possible spoof'; col = '#ffb347';
+      dot.style.background = '#ffb347';
+    }
+    /* the soul renders in HTML contexts — escape it (z2.sec S3): storage is
+       same-origin trust, but the badge must not turn a stored value into markup */
+    var esc = function (s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
+    var soulSafe = esc(soul);
+    txt.innerHTML = '<b style="color:#7ddf8f">' + soulSafe + '.b</b> · <span title="origin-bound public fingerprint — sha256(bnr.b/evm/' + soulSafe + '@' + location.origin + '), pinned on first verified visit (TOFU); an identifier, never a key; a spoofed origin shows a different 0x" style="color:#e2efdb;cursor:help">' + ox + '</span> · rails <b style="color:#7ddf8f">LIVE</b> · <span title="' + state + '" style="color:' + col + ';cursor:pointer" id="rb-trust">' + state + '</span>' + CHECK + ' <span style="color:#5f6f61">' + when + '</span>';
+    txt.title = 'bDiD + crypto rails connected · keyless · origin-pinned · ' + when;
+    wireRecheck();
+    var tp = document.getElementById('rb-trust');
+    if (tp) tp.onclick = function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      var L = [
+        'RAILS TRUST - the https-lock law, ours:',
+        '',
+        'soul: ' + soul,
+        'origin: ' + location.origin,
+        'fingerprint: 0x' + fp.slice(0, 12) + '  (sha256 of bnr.b/evm/' + soul + '@' + location.origin + ')',
+        'state: ' + state,
+        '',
+        'WHY IT RESISTS SPOOFING: the fingerprint binds your soul to THIS origin.',
+        'A phisher on another domain derives a DIFFERENT 0x than the one you',
+        'pinned here - like the lock, it proves the origin you trusted.',
+        '',
+        'VERIFY YOURSELF (any browser console):',
+        "  crypto.subtle.digest('SHA-256', new TextEncoder()",
+        "    .encode('bnr.b/evm/SOUL@' + location.origin))",
+        '    .then(b => console.log("0x" + [...new Uint8Array(b)]',
+        "      .map(x => x.toString(16).padStart(2,'0')).join('').slice(0,12)))",
+        "  (replace SOUL with your name — the 0x must match this badge)",
+        '',
+        'Honest limits: TOFU defends origin-swap spoofing; it is not a key',
+        'signature - spend-class signing rides the wallet-gate (MX-5).'
+      ].join('\n');
+      alert(L);
+    };  }
+  function refresh() { return boot(false); }
+  /* Same-tab soul changes do NOT fire storage events — wallet/bnames dispatch
+     bnr-soul after writing bnr_soul. Cross-tab still rides storage. */
+  document.addEventListener('bnr-soul', function () { refresh(); });
+  window.addEventListener('storage', function (ev) {
+    if (ev && ev.key && ev.key !== 'bnr_soul') return;
+    refresh();
+  });
+  try { window.__bnrRailsRefresh = refresh; } catch (e) {}
+  /* No deferral needed any more — nothing is fetched on load, so there is no
+     load-window noise to dodge. The badge paints from the bake immediately. */
+  setTimeout(pill, 200);
+})();
